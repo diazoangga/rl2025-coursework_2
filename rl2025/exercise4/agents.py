@@ -63,11 +63,15 @@ class DDPG(Agent):
 
         self.upper_action_bound = action_space.high[0]
         self.lower_action_bound = action_space.low[0]
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cpu")
+
 
         # ######################################### #
         #  BUILD YOUR NETWORKS AND OPTIMIZERS HERE  #
         # ######################################### #
         # self.actor = Actor(STATE_SIZE, policy_hidden_size, ACTION_SIZE)
+        # print(STATE_SIZE, policy_hidden_size, ACTION_SIZE)
         self.actor = FCNetwork(
             (STATE_SIZE, *policy_hidden_size, ACTION_SIZE), output_activation=torch.nn.Tanh
         )
@@ -120,6 +124,12 @@ class DDPG(Agent):
                 "critic_optim": self.critic_optim,
             }
         )
+
+        self.actor = self.actor.to(self.device)
+        self.actor_target = self.actor_target.to(self.device)
+        self.critic = self.critic.to(self.device)
+        self.critic_target = self.critic_target.to(self.device)
+
 
 
     def save(self, path: str, suffix: str = "") -> str:
@@ -179,7 +189,17 @@ class DDPG(Agent):
         :return (sample from self.action_space): action the agent should perform
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q4")
+        # raise NotImplementedError("Needed for Q4")
+        obs_tensor = torch.FloatTensor(obs).unsqueeze(0).to(self.device)
+        with torch.no_grad():
+            action = self.actor(obs_tensor).squeeze(0).numpy()
+
+        if explore:
+            action += self.noise.sample().numpy()
+
+        # Clip to action bounds
+        action = np.clip(action, self.lower_action_bound, self.upper_action_bound)
+        return action
 
     def update(self, batch: Transition) -> Dict[str, float]:
         """Update function for DQN
@@ -194,10 +214,43 @@ class DDPG(Agent):
         :return (Dict[str, float]): dictionary mapping from loss names to loss values
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q4")
+        # raise NotImplementedError("Needed for Q4")
 
-        q_loss = 0.0
-        p_loss = 0.0
+        states, actions, next_states, rewards, dones = batch
+        states = states.to(self.device)
+        actions = actions.to(self.device)
+        next_states = next_states.to(self.device)
+        rewards = rewards.to(self.device)
+        dones = dones.to(self.device)
+
+
+        with torch.no_grad():
+            next_actions = self.actor_target(next_states)
+            target_q = self.critic_target(torch.cat([next_states, next_actions], dim=1))
+            target_value = rewards + self.gamma * (1 - dones) * target_q
+
+        predicted_q = self.critic(torch.cat([states, actions], dim=1))
+        q_loss = F.mse_loss(predicted_q, target_value)
+
+        self.critic_optim.zero_grad()
+        q_loss.backward()
+        self.critic_optim.step()
+
+        predicted_actions = self.actor(states)
+        actor_loss = -self.critic(torch.cat([states, predicted_actions], dim=1)).mean()
+
+        self.policy_optim.zero_grad()
+        actor_loss.backward()
+        self.policy_optim.step()
+
+        with torch.no_grad():
+            for target_param, param in zip(self.actor_target.parameters(), self.actor.parameters()):
+                target_param.data.copy_(self.tau * param.data + (1.0 - self.tau) * target_param.data)
+            for target_param, param in zip(self.critic_target.parameters(), self.critic.parameters()):
+                target_param.data.copy_(self.tau * param.data + (1.0 - self.tau) * target_param.data)
+
+        q_loss = q_loss.item()
+        p_loss = actor_loss.item()
         return {
             "q_loss": q_loss,
             "p_loss": p_loss,

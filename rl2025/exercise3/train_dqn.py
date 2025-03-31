@@ -32,11 +32,11 @@ MOUNTAINCAR_CONFIG = {
     "hidden_size": (64,64),
     "target_update_freq": 2000,
     "batch_size": 64,
-    "epsilon_decay_strategy": "linear", # "constant" or "linear" or "exponential"
+    "epsilon_decay_strategy": "exponential", # "constant" or "linear" or "exponential"
     "epsilon_start": 0.5,
     "epsilon_min": 0.05, # only used in linear and exponential decay strategies
-    "epsilon_decay": None, # For exponential epsilon decay
-    "exploration_fraction": 0.75, # For linear epsilon decay, fraction of training time at which epsilon=epsilon_min
+    "epsilon_decay": 0.1, # For exponential epsilon decay
+    "exploration_fraction": None, # For linear epsilon decay, fraction of training time at which epsilon=epsilon_min
     "buffer_capacity": int(1e6),
     "plot_loss": False, # SET TRUE FOR 3.3 (Understanding the Loss)
 }
@@ -60,7 +60,7 @@ elif MOUNTAINCAR_CONFIG['epsilon_decay_strategy'] == "exponential":
 else:
     MOUNTAINCAR_HPARAMS = None
 
-SWEEP_RESULTS_FILE_MOUNTAINCAR = f"rl2025/results/exercise3/DQN-MountainCar-sweep-decay-{MOUNTAINCAR_CONFIG['epsilon_decay_strategy']}-results.pkl"
+SWEEP_RESULTS_FILE_MOUNTAINCAR = f"DQN-MountainCar-sweep-decay-{MOUNTAINCAR_CONFIG['epsilon_decay_strategy']}-results.pkl"
 
 CARTPOLE_CONFIG = {
     "eval_freq": 2000,
@@ -90,6 +90,13 @@ def play_episode(
     batch_size=64,
 ):
     if render:
+        if ENV == "MOUNTAINCAR":
+            CONFIG = MOUNTAINCAR_CONFIG
+        elif ENV == "CARTPOLE":
+            CONFIG = CARTPOLE_CONFIG
+        else:
+            raise(ValueError(f"Unknown environment {ENV}"))
+
         env = gym.make(CONFIG["env"], render_mode="human")
     ep_data = defaultdict(list)
     obs, _ = env.reset()
@@ -283,7 +290,7 @@ if __name__ == "__main__":
         config_list, swept_params = generate_hparam_configs(CONFIG, HPARAMS_SWEEP)
         results = []
         for config in config_list:
-            print(config)
+            # print(config)
             run = Run(config)
             hparams_values = '_'.join(['_'.join([key, str(config[key])]) for key in swept_params])
             run.run_name = hparams_values
@@ -293,7 +300,7 @@ if __name__ == "__main__":
                 run_save_filename = '--'.join([run.config["algo"], run.config["env"], hparams_values, str(i)])
                 if SWEEP_SAVE_ALL_WEIGHTS:
                     run.set_save_filename(run_save_filename)
-                eval_returns, eval_timesteps, times, run_data = train(env, run.config, output=True)
+                eval_returns, eval_timesteps, times, run_data = train(env, run.config, output=False)
                 run.update(eval_returns, eval_timesteps, times, run_data)
             results.append(copy.deepcopy(run))
             print(f"Finished run with hyperparameters {hparams_values}. "

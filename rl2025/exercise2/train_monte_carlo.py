@@ -8,7 +8,7 @@ from tqdm import tqdm
 CONFIG = {
     "eval_freq": 5000, # keep this unchanged
     "epsilon": 0.9,
-    "gamma": 0.99,
+    "gamma": 0.8,
 }
 CONFIG.update(CONSTANTS)
 
@@ -106,5 +106,31 @@ def train(env, config):
 
 
 if __name__ == "__main__":
-    env = gym.make(CONFIG["env"])
-    total_reward, _, _, q_table = train(env, CONFIG)
+
+    SWEEP = False
+    is_slippery = False
+    if SWEEP:
+        import json
+        eval_return_mean = {}
+        for i in range(10):
+            print(f'Sweep:  {i+1}/10')
+            env = gym.make(CONFIG["env"], is_slippery=is_slippery)
+            _, eval_return, _, _ = train(env, CONFIG)
+            max_eval = max(eval_return) if eval_return else 0
+            eval_return_mean[str(i)] = max_eval
+
+            overall_mean = sum(eval_return_mean.values())/len(eval_return_mean)
+            result_data = {
+                "results": eval_return_mean,
+                "mean": overall_mean
+            }
+        gamma = CONFIG["gamma"]
+        filepath = f"rl2025/exercise2/results/monte_carlo_sweep_results_{gamma}_is_slippery_{is_slippery}.json"
+        with open(filepath, "w") as f:
+            json.dump(result_data, f, indent=4)
+
+        print(filepath)
+
+    else:    
+        env = gym.make(CONFIG["env"], is_slippery=is_slippery)
+        total_reward, _, _, q_table = train(env, CONFIG)

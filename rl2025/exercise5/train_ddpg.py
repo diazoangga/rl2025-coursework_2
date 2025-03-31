@@ -28,20 +28,20 @@ ENV = "RACETRACK"
 # IN EXERCISE 5 YOU SHOULD TUNE PARAMETERS IN THIS CONFIG ONLY
 RACETRACK_CONFIG = {
     "policy_learning_rate": 1e-4,
-    "critic_learning_rate": 1e-3,
-    "critic_hidden_size": [32, 32, 32],
-    "policy_hidden_size": [32, 32, 32],
+    "critic_learning_rate": 5e-4,
+    "critic_hidden_size": [64, 64, 64],
+    "policy_hidden_size": [64, 64, 64],
     "gamma": 0.99,
-    "tau": 0.5,
-    "batch_size": 32,
+    "tau": 0.05,
+    "batch_size": 64,
     "buffer_capacity": int(1e6),
 }
 RACETRACK_CONFIG.update(RACETRACK_CONSTANTS)
 
 ### INCLUDE YOUR CHOICE OF HYPERPARAMETERS HERE ###
 RACETRACK_HPARAMS = {
-    "critic_hidden_size": ...,
-    "policy_hidden_size": ...,
+    "critic_hidden_size": [[64,64,64]],
+    "policy_hidden_size": [[64,64,64]],
 }
 
 SWEEP_RESULTS_FILE_BIPEDAL = "DDPG-Racetrack-sweep-results-ex5.pkl"
@@ -61,8 +61,9 @@ if __name__ == "__main__":
         config_list, swept_params = generate_hparam_configs(CONFIG, HPARAMS_SWEEP)
         results = []
         for config in config_list:
+            print(config)
             run = Run(config)
-            hparams_values = '_'.join([':'.join([key, str(config[key])]) for key in swept_params])
+            hparams_values = '_'.join(['_'.join([key, str(config[key])]) for key in swept_params])
             run.run_name = hparams_values
             print(f"\nStarting new run...")
             for i in range(NUM_SEEDS_SWEEP):

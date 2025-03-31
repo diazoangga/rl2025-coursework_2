@@ -18,11 +18,14 @@ rl2025/exercise2/train_q_learning.py
 rl2025/exercise2/utils.py
 rl2025/exercise3/__init__.py
 rl2025/exercise3/agents.py
+rl2025/exercise3/agents_old.py
 rl2025/exercise3/evaluate_discreterl.py
+rl2025/exercise3/evaluate_discreterl_old.py
 rl2025/exercise3/evaluate_dqn.py
 rl2025/exercise3/networks.py
 rl2025/exercise3/replay.py
 rl2025/exercise3/train_discreterl.py
+rl2025/exercise3/train_discreterl_old.py
 rl2025/exercise3/train_dqn.py
 rl2025/exercise4/__init__.py
 rl2025/exercise4/agents.py

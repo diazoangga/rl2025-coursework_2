@@ -17,7 +17,7 @@ def question2_1() -> str:
     b) 0.8
     return: (str): your answer as a string. accepted strings: "a" or "b"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a" or "b"
+    answer = "a"  # TYPE YOUR ANSWER HERE "a" or "b"
     return answer
 
 
@@ -29,7 +29,7 @@ def question2_2() -> str:
     b) 0.8
     return: (str): your answer as a string. accepted strings: "a" or "b"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a" or "b"
+    answer = "a"  # TYPE YOUR ANSWER HERE "a" or "b"
     return answer
 
 
@@ -42,7 +42,7 @@ def question2_3() -> str:
     b) Every-Visit Monte Carlo
     return: (str): your answer as a string. accepted strings: "a" or "b"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a" or "b"
+    answer = "b"  # TYPE YOUR ANSWER HERE "a" or "b"
     return answer
 
 
@@ -53,7 +53,9 @@ def question2_4() -> str:
     by [Q-learning / Every-Visit Monte Carlo] when compared to the other algorithm.
     return: answer (str): your answer as a string (100 words max)
     """
-    answer = ""  # TYPE YOUR ANSWER HERE (100 words max)
+    answer = "Monte Carlo is more affected by gamma because it uses the full return over an episode. \
+        A higher gamma increases the weight of future rewards greatly, impacting all updates (0.7136 -> 0.3012). \
+            Q-learning updates are bootstrapped and local, so while gamma still matters, its impact is less drastic than in Monte Carlo (0.8538 -> 0.5818)."  # TYPE YOUR ANSWER HERE (100 words max)
     return answer
 
 def question2_5() -> str:
@@ -63,7 +65,9 @@ def question2_5() -> str:
     by [Q-learning / Every-Visit Monte Carlo].
     return: answer (str): your answer as a string (100 words max)
     """
-    answer = ""  # TYPE YOUR ANSWER HERE (100 words max)
+    answer = "In the slippery environment, the transition model is stochastic, that may not lead to expect the \
+        output of action. It makes learning harder for both algorithms more xploration. In contrast, non-slippery environment is \
+            determinitsic, leading to faster learning and more stable returns."  # TYPE YOUR ANSWER HERE (100 words max)
     return answer
 
 
@@ -80,7 +84,7 @@ def question3_1() -> str:
     c) 2e-4
     return: (str): your answer as a string. accepted strings: "a", "b" or "c"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a", "b" or "c"
+    answer = "a"  # TYPE YOUR ANSWER HERE "a", "b" or "c"
     return answer
 
 
@@ -94,7 +98,7 @@ def question3_2() -> str:
     c) 0.01
     return: (str): your answer as a string. accepted strings: "a", "b" or "c"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a", "b" or "c"
+    answer = "c"  # TYPE YOUR ANSWER HERE "a", "b" or "c"
     return answer
 
 
@@ -124,7 +128,7 @@ def question3_4() -> str:
     e) it depends on the number of training timesteps
     return: (str): your answer as a string. accepted strings: "a", "b", "c", "d" or "e"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a", "b", "c", "d" or "e"
+    answer = "b"  # TYPE YOUR ANSWER HERE "a", "b", "c", "d" or "e"
     return answer
 
 
@@ -140,7 +144,7 @@ def question3_5() -> str:
     e) it depends on the number of training timesteps
     return: (str): your answer as a string. accepted strings: "a", "b", "c", "d" or "e"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a", "b", "c", "d" or "e"
+    answer = "a"  # TYPE YOUR ANSWER HERE "a", "b", "c", "d" or "e"
     return answer
 
 
@@ -153,7 +157,10 @@ def question3_6() -> str:
     strategy you implemented).
     return: answer (str): your answer as a string (100 words max)
     """
-    answer = ""  # TYPE YOUR ANSWER HERE (100 words max)
+    answer = "Linear decay using an exploration fraction ties epsilon decay directly to the total training timestep. \
+        This ensures epsilon reaches its minimum at a consistent point across environments of different lengths. \
+        In contrast, exponential decay can be too fast or too slow depending on the decay rate and number of steps, \
+        making it harder to tune."  # TYPE YOUR ANSWER HERE (100 words max)
     return answer
 
 
@@ -164,7 +171,11 @@ def question3_7() -> str:
     (where we usually see a fairly steady decrease of the loss throughout training)
     return: answer (str): your answer as a string (150 words max)
     """
-    answer = ""  # TYPE YOUR ANSWER HERE (150 words max)
+    answer = "Unlike supervised learning, DQN optimizes targets that change as the agent learns. The Q-target depends on \
+        the target network and future max Q-values, which are both non-stationary. Early in training or during explore, the agent may \
+        receive noisy or inconsistent targets due to untrained target networks (mostly zeros) and exploration. As the buffer fills and \
+        policies improve, the targets shift, potentially causing increases in loss even if the policy is better. \
+        After some learning, the target networks become stable and so the critics_net network."  # TYPE YOUR ANSWER HERE (150 words max)
     return answer
 
 
@@ -175,7 +186,9 @@ def question3_8() -> str:
     the DQN training process.
     return: answer (str): your answer as a string (100 words max)
     """
-    answer = ""  # TYPE YOUR ANSWER HERE (100 words max)
+    answer = "Loss spikes occur when the target network is updated. Since the target values suddenly change, the critic \
+        must adjust to new predictions, increasing the temporal-difference error. These updates happen at regular \
+        intervals, causing consistent spikes in the loss curve during training."  # TYPE YOUR ANSWER HERE (100 words max)
     return answer
 
 

@@ -15,10 +15,10 @@ from rl2025.util.hparam_sweeping import generate_hparam_configs
 from rl2025.util.result_processing import Run
 
 RENDER = False # FALSE FOR FASTER TRAINING / TRUE TO VISUALIZE ENVIRONMENT DURING EVALUATION
-SWEEP = False # TRUE TO SWEEP OVER POSSIBLE HYPERPARAMETER CONFIGURATIONS
+SWEEP = True # TRUE TO SWEEP OVER POSSIBLE HYPERPARAMETER CONFIGURATIONS
 NUM_SEEDS_SWEEP = 10 # NUMBER OF SEEDS TO USE FOR EACH HYPERPARAMETER CONFIGURATION
 SWEEP_SAVE_RESULTS = True # TRUE TO SAVE SWEEP RESULTS TO A FILE
-SWEEP_SAVE_ALL_WEIGHTS = False # TRUE TO SAVE ALL WEIGHTS FROM EACH SEED
+SWEEP_SAVE_ALL_WEIGHTS = True # TRUE TO SAVE ALL WEIGHTS FROM EACH SEED
 ENV = "MOUNTAINCAR" # "CARTPOLE" is also possible if you uncomment the corresponding code, but is not assessed here.
 
 ### ASSIGNMENT: CHANGE epsilon_decay_strategy: "constant" TO "linear" OR "exponential" TO ANSWER QUESTIONS 3.2 TO 3.6 IN answer_sheet.py ###
@@ -29,7 +29,7 @@ MOUNTAINCAR_CONFIG = {
     "hidden_size": (64,64),
     "target_update_freq": 2000,
     "batch_size": 64,   # not used here
-    "epsilon_decay_strategy": "constant", # "constant" or "linear" or "exponential"
+    "epsilon_decay_strategy": "linear", # "constant" or "linear" or "exponential"
     "epsilon_start": 0.5,
     "epsilon_min": 0.05, # only used in linear and exponential decay strategies
     "epsilon_decay": None, # For exponential epsilon decay
@@ -42,7 +42,7 @@ MOUNTAINCAR_CONFIG.update(MOUNTAINCAR_CONSTANTS)
 
 MOUNTAINCAR_HPARAMS_LINEAR_DECAY = {
     "epsilon_start": [1.0,],
-    "exploration_fraction": [0.99, 0.75, 0.01]
+    "exploration_fraction": [0.01]
     }
 
 MOUNTAINCAR_HPARAMS_EXP_DECAY = {
@@ -105,34 +105,32 @@ def play_episode(
     """
 
     if render:
+        if ENV == "CARTPOLE":
+            CONFIG = CARTPOLE_CONFIG
+        elif ENV == "MOUNTAINCAR":
+            CONFIG = MOUNTAINCAR_CONFIG
+        else:
+            raise(ValueError(f"Unknown environment {ENV}"))
         env = gym.make(CONFIG["env"], render_mode="human")
 
     done = False
     num_steps = 0
     episode_return = 0
 
-    observations = []
-    actions = []
-    rewards = []
-
     while not done and num_steps < max_steps:
         action = agent.act(np.array(obs), explore=explore)
         nobs, rew, terminated, truncated, _ = env.step(action)
         done = terminated or truncated
 
-        observations.append(obs)
-        actions.append(action)
-        rewards.append(rew)
+        if train:
+            # Update agent after each step with (s, a, r, s', done) tuple
+            q_value = agent.update(obs, action, rew, nobs, done)
+            ep_data['q_values'].append(q_value)
 
         num_steps += 1
         episode_return += rew
 
         obs = nobs
-
-    if train:
-        new_data = agent.update(rewards, observations, actions)
-        for k, v in new_data.items():
-            ep_data[k].append(v)
 
     return num_steps, episode_return, ep_data
 
@@ -149,9 +147,10 @@ def train(env: gym.Env, config, output: bool = True) -> Tuple[np.ndarray, np.nda
     """
     timesteps_elapsed = 0
 
-    agent = DiscreteRL(
+    agent = DiscreteRL(alpha=0.02,
         action_space=env.action_space, observation_space=env.observation_space, **config
     )
+    print(agent.__dict__)
 
     total_steps = config["max_timesteps"]
     eval_returns_all = []
@@ -183,7 +182,7 @@ def train(env: gym.Env, config, output: bool = True) -> Tuple[np.ndarray, np.nda
 
             if timesteps_elapsed % config["eval_freq"] < num_steps:
                 eval_return = 0
-                if config["env"] == "CartPole-v1":
+                if config["env"] == "CartPole-v1" or config["env"] == "MountainCar-v0":
                     max_steps = config["episode_length"]
                 else:
                     raise ValueError(f"Unknown environment {config['env']}")
@@ -216,7 +215,7 @@ def train(env: gym.Env, config, output: bool = True) -> Tuple[np.ndarray, np.nda
 
 
 if __name__ == "__main__":
-
+    print(ENV)
     if ENV == "MOUNTAINCAR":
         CONFIG = MOUNTAINCAR_CONFIG
         HPARAMS_SWEEP = MOUNTAINCAR_HPARAMS
@@ -230,12 +229,12 @@ if __name__ == "__main__":
 
     env = gym.make(CONFIG["env"])
 
-    if SWEEP:
+    if SWEEP and HPARAMS_SWEEP:
         config_list, swept_params = generate_hparam_configs(CONFIG, HPARAMS_SWEEP)
         results = []
         for config in config_list:
             run = Run(config)
-            hparams_values = '_'.join([':'.join([key, str(config[key])]) for key in swept_params])
+            hparams_values = '_'.join(['_'.join([key, str(config[key])]) for key in swept_params])
             run.run_name = hparams_values
             print(f"\nStarting new run...")
             for i in range(NUM_SEEDS_SWEEP):
@@ -243,7 +242,7 @@ if __name__ == "__main__":
                 run_save_filename = '--'.join([run.config["algo"], run.config["env"], hparams_values, str(i)])
                 if SWEEP_SAVE_ALL_WEIGHTS:
                     run.set_save_filename(run_save_filename)
-                eval_returns, eval_timesteps, times, run_data = train(env, run.config, output=False)
+                eval_returns, eval_timesteps, times, run_data = train(env, run.config, output=True)
                 run.update(eval_returns, eval_timesteps, times, run_data)
             results.append(copy.deepcopy(run))
             print(f"Finished run with hyperparameters {hparams_values}. "

@@ -8,7 +8,7 @@ from rl2025.exercise3.train_dqn import play_episode, CARTPOLE_CONFIG, MOUNTAINCA
 from rl2025.util.result_processing import Run, get_best_saved_run
 
 ENV = "MOUNTAINCAR" # "CARTPOLE" OR "MOUNTAINCAR"
-RENDER = True
+RENDER = False
 def evaluate(env: gym.Env, config, output: bool = True) -> Tuple[List[float], List[float]]:
     """
     Execute training of DQN on given environment using the provided configuration
@@ -65,6 +65,7 @@ if __name__ == "__main__":
     print(f"Best run was {best_run_filename}")
     CONFIG.update(best_run.config)
     CONFIG['save_filename'] = best_run_filename
+    # print(best_run_filename)
     returns = evaluate(env, CONFIG)
     print(returns)
     env.close()
